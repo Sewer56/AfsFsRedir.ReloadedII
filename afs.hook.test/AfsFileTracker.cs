@@ -3,40 +3,28 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using Afs.Hook.Test.Pointers;
 using Reloaded.Hooks.Definitions;
-using Reloaded.Hooks.Definitions.Enums;
 
 namespace Afs.Hook.Test
 {
     /// <summary>
     /// Monitors calls to NtCreateFile, keeping track of all 
     /// </summary>
-    public unsafe class AfsFileTracker
+    public class AfsFileTracker
     {
         /// <summary>
         /// Maps file handles to file paths.
         /// </summary>
         private ConcurrentDictionary<IntPtr, string> _handleToPathMap = new ConcurrentDictionary<IntPtr, string>();
         private IHook<Native.Native.NtCreateFile> _createFileHook;
-
-        private IAsmHook _closeFileHook;
-        private IReverseWrapper<Native.Native.NtClose> _reverseWrapper;
-
         private object _lock = new object();
 
         public AfsFileTracker(NativeFunctions functions, IReloadedHooks hooks)
         {
             _createFileHook = functions.NtCreateFile.Hook(NtCreateFileImpl).Activate();
-            _reverseWrapper = hooks.CreateReverseWrapper<Native.Native.NtClose>(OnNtClose);
-            _closeFileHook = functions.NtClose.MakeAsmHook(new[]
-            {
-                "use32",
-
-            }, AsmHookBehaviour.ExecuteAfter);
         }
 
         private int NtCreateFileImpl(out IntPtr handle, FileAccess access, ref Native.Native.OBJECT_ATTRIBUTES objectAttributes, ref Native.Native.IO_STATUS_BLOCK ioStatus, ref long allocSize, uint fileAttributes, FileShare share, uint createDisposition, uint createOptions, IntPtr eaBuffer, uint eaLength)
@@ -62,17 +50,6 @@ namespace Afs.Hook.Test
         }
 
         /// <summary>
-        /// Executes when Windows runs the NtClose method.
-        /// </summary>
-        private void OnNtClose(IntPtr* handlePtr)
-        {
-            if (_handleToPathMap.ContainsKey(*handlePtr))
-                _handleToPathMap.Remove(*handlePtr, out _);
-
-            Console.WriteLine($"[AFSHook] NtClose ({*handlePtr})");
-        }
-
-        /// <summary>
         /// Tries to resolve a given file path from NtCreateFile to a full file path.
         /// </summary>
         private bool TryGetFullPath(string oldFilePath, out string newFilePath)
@@ -89,10 +66,5 @@ namespace Afs.Hook.Test
             newFilePath = oldFilePath;
             return false;
         }
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        [Reloaded.Hooks.Definitions.X64.Function(Reloaded.Hooks.Definitions.X64.CallingConventions.Microsoft)]
-        [Reloaded.Hooks.Definitions.X86.Function(Reloaded.Hooks.Definitions.X86.CallingConventions.Stdcall)]
-        private delegate void OnNtCloseDel(IntPtr* handlePtr);
     }
 }

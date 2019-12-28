@@ -11,13 +11,11 @@ namespace Afs.Hook.Test.Pointers
 
         public IFunction<NtCreateFile> NtCreateFile;
         public IFunction<NtReadFile> NtReadFile;
-        public IFunction<NtClose> NtClose;
 
-        public NativeFunctions(IntPtr ntCreateFile, IntPtr ntReadFile, IntPtr ntClose, IReloadedHooks hooks)
+        public NativeFunctions(IntPtr ntCreateFile, IntPtr ntReadFile, IReloadedHooks hooks)
         {
             NtCreateFile = hooks.CreateFunction<NtCreateFile>((long) ntCreateFile);
             NtReadFile = hooks.CreateFunction<NtReadFile>((long) ntReadFile);
-            NtClose = hooks.CreateFunction<NtClose>((long) ntClose);
         }
 
         public static NativeFunctions GetInstance(IReloadedHooks hooks)
@@ -28,8 +26,7 @@ namespace Afs.Hook.Test.Pointers
             var ntdllHandle = LoadLibraryW("ntdll");
             var ntCreateFilePointer = GetProcAddress(ntdllHandle, "NtCreateFile");
             var ntReadFilePointer = GetProcAddress(ntdllHandle, "NtReadFile");
-            var ntClosePointer = GetProcAddress(ntdllHandle, "NtClose");
-            _instance = new NativeFunctions(ntCreateFilePointer, ntReadFilePointer, ntClosePointer, hooks);
+            _instance = new NativeFunctions(ntCreateFilePointer, ntReadFilePointer, hooks);
             _instanceMade = true;
 
             return _instance;

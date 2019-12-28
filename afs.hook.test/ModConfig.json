@@ -1,0 +1,15 @@
+{
+  "ModId": "afs.hook.test",
+  "ModName": "AFS Hook Test",
+  "ModAuthor": "Someone",
+  "ModVersion": "1.0.0",
+  "ModDescription": "Template for a Reloaded Mod Configuration",
+  "ModDll": "Afs.Hook.Test.dll",
+  "ModIcon": "Preview.png",
+  "ModR2RManagedDll32": "",
+  "ModR2RManagedDll64": "",
+  "ModNativeDll32": "",
+  "ModNativeDll64": "",
+  "ModDependencies": [ "reloaded.sharedlib.hooks" ],
+  "SupportedAppId": [ "tsonic_win.exe" ]
+}

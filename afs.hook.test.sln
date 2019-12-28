@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "afs.hook.test", "afs.hook.test\afs.hook.test.csproj", "{14B96780-1396-45CC-85C5-35A7993D398D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{14B96780-1396-45CC-85C5-35A7993D398D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14B96780-1396-45CC-85C5-35A7993D398D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14B96780-1396-45CC-85C5-35A7993D398D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14B96780-1396-45CC-85C5-35A7993D398D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F28FC068-474E-46B6-B279-73F685DA1CAF}
+	EndGlobalSection
+EndGlobal

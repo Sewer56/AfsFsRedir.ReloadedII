@@ -2,7 +2,7 @@
 using Reloaded.Hooks.Definitions;
 using static Afs.Hook.Test.Native.Native;
 
-namespace Afs.Hook.Test.Pointers
+namespace Afs.Hook.Test.Structs
 {
     public struct NativeFunctions
     {
@@ -11,11 +11,13 @@ namespace Afs.Hook.Test.Pointers
 
         public IFunction<NtCreateFile> NtCreateFile;
         public IFunction<NtReadFile> NtReadFile;
+        public IFunction<NtSetInformationFile> SetFilePointer;
 
-        public NativeFunctions(IntPtr ntCreateFile, IntPtr ntReadFile, IReloadedHooks hooks)
+        public NativeFunctions(IntPtr ntCreateFile, IntPtr ntReadFile, IntPtr ntSetInformationFile, IReloadedHooks hooks)
         {
             NtCreateFile = hooks.CreateFunction<NtCreateFile>((long) ntCreateFile);
             NtReadFile = hooks.CreateFunction<NtReadFile>((long) ntReadFile);
+            SetFilePointer = hooks.CreateFunction<NtSetInformationFile>((long) ntSetInformationFile);
         }
 
         public static NativeFunctions GetInstance(IReloadedHooks hooks)
@@ -23,10 +25,12 @@ namespace Afs.Hook.Test.Pointers
             if (_instanceMade)
                 return _instance;
 
-            var ntdllHandle = LoadLibraryW("ntdll");
+            var ntdllHandle    = LoadLibraryW("ntdll");
             var ntCreateFilePointer = GetProcAddress(ntdllHandle, "NtCreateFile");
             var ntReadFilePointer = GetProcAddress(ntdllHandle, "NtReadFile");
-            _instance = new NativeFunctions(ntCreateFilePointer, ntReadFilePointer, hooks);
+            var setFilePointer = GetProcAddress(ntdllHandle, "NtSetInformationFile");
+
+            _instance = new NativeFunctions(ntCreateFilePointer, ntReadFilePointer, setFilePointer, hooks);
             _instanceMade = true;
 
             return _instance;

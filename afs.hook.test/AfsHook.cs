@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Afs.Hook.Test.Pointers;
-using Reloaded.Hooks.Definitions;
+using Afs.Hook.Test.Structs;
 
 namespace Afs.Hook.Test
 {
@@ -13,9 +12,9 @@ namespace Afs.Hook.Test
     {
         private AfsFileTracker _afsFileTracker;
 
-        public AfsHook(NativeFunctions functions, IReloadedHooks hooks)
+        public AfsHook(NativeFunctions functions)
         {
-            _afsFileTracker = new AfsFileTracker(functions, hooks);
+            _afsFileTracker = new AfsFileTracker(functions);
         }
     }
 }

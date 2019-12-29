@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using Afs.Hook.Test.Pointers;
+using Afs.Hook.Test.Structs;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
 using IReloadedHooks = Reloaded.Hooks.ReloadedII.Interfaces.IReloadedHooks;
@@ -18,7 +18,7 @@ namespace Afs.Hook.Test
             _modLoader.GetController<IReloadedHooks>().TryGetTarget(out var hooks);
 
             /* Your mod code starts here. */
-            _afsHook = new AfsHook(NativeFunctions.GetInstance(hooks), hooks);
+            _afsHook = new AfsHook(NativeFunctions.GetInstance(hooks));
         }
 
         /* Mod loader actions. */

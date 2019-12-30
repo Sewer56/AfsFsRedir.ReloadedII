@@ -7,7 +7,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using Afs.Hook.Test.Structs;
+using AFSLib;
+using AFSLib.AfsStructs;
 using Reloaded.Hooks.Definitions;
+using Reloaded.Memory;
 using FileInfo = Afs.Hook.Test.Structs.FileInfo;
 
 namespace Afs.Hook.Test
@@ -17,6 +20,16 @@ namespace Afs.Hook.Test
     /// </summary>
     public unsafe class AfsFileTracker
     {
+        /// <summary>
+        /// Executed when a handle to an AFS file is opened.
+        /// </summary>
+        public event AfsHandleOpened OnAfsHandleOpened = (path, handle) => { };
+
+        /// <summary>
+        /// Executed after data is read from an AFS file.
+        /// </summary>
+        public event AfsDataRead OnAfsDataRead = (handle, buffer, length, offset) => { };
+
         /// <summary>
         /// Maps file handles to file paths.
         /// </summary>
@@ -34,7 +47,6 @@ namespace Afs.Hook.Test
             _createFileHook = functions.NtCreateFile.Hook(NtCreateFileImpl).Activate();
             _readFileHook = functions.NtReadFile.Hook(NtReadFileImpl).Activate();
             _setFilePointerHook = functions.SetFilePointer.Hook(SetInformationFileImpl).Activate();
-
 
             // TODO: Hook NtClose
             // Problem: Native->Managed Transition hits NtClose in .NET Core, so our hook code is never hit.
@@ -62,7 +74,11 @@ namespace Afs.Hook.Test
             {
                 if (_handleToInfoMap.ContainsKey(handle))
                 {
-                    Console.WriteLine($"[AFSHook] Read Request, Buffer: {(long)buffer:X}, Length: {length}, Offset (Cached from SetInformationFile): {_handleToInfoMap[handle].FilePointer}");
+                    long offset = _handleToInfoMap[handle].FilePointer;
+                    Console.WriteLine($"[AFSHook] Read Request, Buffer: {(long)buffer:X}, Length: {length}, Offset (Cached from SetInformationFile): {offset}");
+                    DisableRedirectionHooks();
+                    OnAfsDataRead(handle, buffer, length, offset);
+                    EnableRedirectionHooks();
                 }
 
                 return _readFileHook.OriginalFunction(handle, hEvent, ref apcRoutine, ref apcContext, ref ioStatus, buffer, length, byteOffset, key);
@@ -74,21 +90,52 @@ namespace Afs.Hook.Test
             lock (_createLock)
             {
                 string oldFileName = objectAttributes.ObjectName.ToString();
-                if (TryGetFullPath(oldFileName, out var newFilePath))
-                {
-                    // TODO: Add check for .afs file header.
-                    if (newFilePath.Contains(".afs", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var result = _createFileHook.OriginalFunction(out handle, access, ref objectAttributes, ref ioStatus, ref allocSize, fileAttributes, share, createDisposition, createOptions, eaBuffer, eaLength);
-                        _handleToInfoMap[handle] = new FileInfo(newFilePath, 0);
-                        Console.WriteLine($"[AFSHook] AFS File Handle Opened: {handle}, File: {newFilePath}");
+                if (!TryGetFullPath(oldFileName, out var newFilePath))
+                    return _createFileHook.OriginalFunction(out handle, access, ref objectAttributes, ref ioStatus, ref allocSize, fileAttributes, share, createDisposition, createOptions, eaBuffer, eaLength);
 
-                        return result;
+                // Check if AFS file and register if it is.
+                if (newFilePath.Contains(Constants.AfsExtension, StringComparison.OrdinalIgnoreCase))
+                {
+                    var result = _createFileHook.OriginalFunction(out handle, access, ref objectAttributes, ref ioStatus, ref allocSize, fileAttributes, share, createDisposition, createOptions, eaBuffer, eaLength);
+                    DisableRedirectionHooks();
+                    if (IsAfsFile(newFilePath))
+                    {
+                        Console.WriteLine($"[AFSHook] AFS File Handle Opened: {handle}, File: {newFilePath}");
+                        _handleToInfoMap[handle] = new FileInfo(newFilePath, 0);
+                        OnAfsHandleOpened(handle, newFilePath);
                     }
+                    EnableRedirectionHooks();
+                    return result;
+
                 }
 
                 return _createFileHook.OriginalFunction(out handle, access, ref objectAttributes, ref ioStatus, ref allocSize, fileAttributes, share, createDisposition, createOptions, eaBuffer, eaLength);
             }
+        }
+
+        private void DisableRedirectionHooks()
+        {
+            _createFileHook.Disable();
+            _readFileHook.Disable();
+        }
+
+        private void EnableRedirectionHooks()
+        {
+            _readFileHook.Enable();
+            _createFileHook.Enable();
+        }
+
+        /// <summary>
+        /// Checks if a file at a specified path is an AFS archive.
+        /// </summary>
+        private bool IsAfsFile(string filePath)
+        {
+            using FileStream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, sizeof(AfsHeader));
+            
+            var data = new byte[sizeof(AfsHeader)];
+            stream.Read(data, 0, data.Length);
+            Struct.FromArray(data, out AfsHeader header);
+            return header.IsAfsArchive;
         }
 
         /// <summary>
@@ -108,5 +155,8 @@ namespace Afs.Hook.Test
             newFilePath = oldFilePath;
             return false;
         }
+
+        public delegate void AfsHandleOpened(IntPtr handle, string filePath);
+        public delegate void AfsDataRead(IntPtr handle, byte* buffer, uint length, long offset);
     }
 }

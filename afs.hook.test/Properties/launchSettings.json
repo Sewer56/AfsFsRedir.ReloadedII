@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "afs.hook.test": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

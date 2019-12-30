@@ -2,7 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
@@ -15,9 +17,6 @@ using FileInfo = Afs.Hook.Test.Structs.FileInfo;
 
 namespace Afs.Hook.Test
 {
-    /// <summary>
-    /// Monitors calls to NtCreateFile, keeping track of all 
-    /// </summary>
     public unsafe class AfsFileTracker
     {
         /// <summary>
@@ -28,7 +27,11 @@ namespace Afs.Hook.Test
         /// <summary>
         /// Executed after data is read from an AFS file.
         /// </summary>
-        public event AfsDataRead OnAfsDataRead = (handle, buffer, length, offset) => { };
+        public event AfsDataRead OnAfsReadData = (IntPtr handle, byte* buffer, uint length, long offset, out int numReadBytes) =>
+        {
+            numReadBytes = 0;
+            return false;
+        };
 
         /// <summary>
         /// Maps file handles to file paths.
@@ -39,7 +42,7 @@ namespace Afs.Hook.Test
         private IHook<Native.Native.NtSetInformationFile> _setFilePointerHook;
 
         private object _createLock = new object();
-        private object _setFilePointerLock = new object();
+        private object _setInfoLock = new object();
         private object _readLock = new object();
 
         public AfsFileTracker(NativeFunctions functions)
@@ -56,11 +59,11 @@ namespace Afs.Hook.Test
 
         private int SetInformationFileImpl(IntPtr hfile, out Native.Native.IO_STATUS_BLOCK ioStatusBlock, void* fileInformation, uint length, Native.Native.FileInformationClass fileInformationClass)
         {
-            lock (_setFilePointerLock)
+            lock (_setInfoLock)
             {
                 if (_handleToInfoMap.ContainsKey(hfile) && fileInformationClass == Native.Native.FileInformationClass.FilePositionInformation)
                 {
-                    var pointer = *(long*) fileInformation;
+                    var pointer = *(long*)fileInformation;
                     _handleToInfoMap[hfile].FilePointer = pointer;
                 }
 
@@ -68,20 +71,36 @@ namespace Afs.Hook.Test
             }
         }
 
-        private unsafe int NtReadFileImpl(IntPtr handle, IntPtr hEvent, ref IntPtr apcRoutine, ref IntPtr apcContext, ref Native.Native.IO_STATUS_BLOCK ioStatus, byte* buffer, uint length, long* byteOffset, IntPtr key)
+        private unsafe int NtReadFileImpl(IntPtr handle, IntPtr hEvent, IntPtr* apcRoutine, IntPtr* apcContext, ref Native.Native.IO_STATUS_BLOCK ioStatus, byte* buffer, uint length, long* byteOffset, IntPtr key)
         {
             lock (_readLock)
             {
                 if (_handleToInfoMap.ContainsKey(handle))
                 {
-                    long offset = _handleToInfoMap[handle].FilePointer;
-                    Console.WriteLine($"[AFSHook] Read Request, Buffer: {(long)buffer:X}, Length: {length}, Offset (Cached from SetInformationFile): {offset}");
+                    long offset          = _handleToInfoMap[handle].FilePointer;
+                    long requestedOffset = byteOffset != (void*) 0 ? *byteOffset : -1;
+                    Console.WriteLine($"[AFSHook] Read Request, Buffer: {(long)buffer:X}, Length: {length}, Offset (via SetInformationFile): {offset}, Requested Offset (Optional): {requestedOffset}");
+                    
                     DisableRedirectionHooks();
-                    OnAfsDataRead(handle, buffer, length, offset);
+                    bool result;
+                    int numReadBytes;
+                    result = requestedOffset != -1 ? OnAfsReadData(handle, buffer, length, requestedOffset, out numReadBytes) 
+                                                   : OnAfsReadData(handle, buffer, length, offset, out numReadBytes);
                     EnableRedirectionHooks();
+
+                    if (result)
+                    {
+                        offset += length;
+                        SetInformationFileImpl(handle, out _, &offset, sizeof(long), Native.Native.FileInformationClass.FilePositionInformation);
+
+                        // Set number of read bytes.
+                        ioStatus.Status      = 0;
+                        ioStatus.Information = new IntPtr(numReadBytes);
+                        return 0;
+                    }
                 }
 
-                return _readFileHook.OriginalFunction(handle, hEvent, ref apcRoutine, ref apcContext, ref ioStatus, buffer, length, byteOffset, key);
+                return _readFileHook.OriginalFunction(handle, hEvent, apcRoutine, apcContext, ref ioStatus, buffer, length, byteOffset, key);
             }
         }
 
@@ -106,10 +125,18 @@ namespace Afs.Hook.Test
                     }
                     EnableRedirectionHooks();
                     return result;
-
                 }
 
-                return _createFileHook.OriginalFunction(out handle, access, ref objectAttributes, ref ioStatus, ref allocSize, fileAttributes, share, createDisposition, createOptions, eaBuffer, eaLength);
+                var ntStatus = _createFileHook.OriginalFunction(out handle, access, ref objectAttributes, ref ioStatus, ref allocSize, fileAttributes, share, createDisposition, createOptions, eaBuffer, eaLength);
+
+                // Invalidate Duplicate Handles (until we implement NtClose hook).
+                if (_handleToInfoMap.ContainsKey(handle))
+                {
+                    _handleToInfoMap.TryRemove(handle, out var value);
+                    Console.WriteLine($"[AFSHook] Removed old disposed handle: {handle}, File: {value.FilePath}");
+                }
+
+                return ntStatus;
             }
         }
 
@@ -130,6 +157,9 @@ namespace Afs.Hook.Test
         /// </summary>
         private bool IsAfsFile(string filePath)
         {
+            if (!File.Exists(filePath))
+                return false;
+
             using FileStream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, sizeof(AfsHeader));
             
             var data = new byte[sizeof(AfsHeader)];
@@ -157,6 +187,6 @@ namespace Afs.Hook.Test
         }
 
         public delegate void AfsHandleOpened(IntPtr handle, string filePath);
-        public delegate void AfsDataRead(IntPtr handle, byte* buffer, uint length, long offset);
+        public delegate bool AfsDataRead(IntPtr handle, byte* buffer, uint length, long offset, out int numReadBytes);
     }
 }

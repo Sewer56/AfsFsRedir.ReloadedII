@@ -6,6 +6,7 @@ using Afs.Hook.Test.Afs;
 using Afs.Hook.Test.Structs;
 using AFSLib;
 using AFSLib.AfsStructs;
+using Microsoft.Win32.SafeHandles;
 using Reloaded.Memory;
 
 namespace Afs.Hook.Test
@@ -24,6 +25,51 @@ namespace Afs.Hook.Test
         {
             _afsFileTracker = new AfsFileTracker(functions);
             _afsFileTracker.OnAfsHandleOpened += OnAfsHandleOpened;
+            _afsFileTracker.OnAfsReadData += OnAfsReadData;
+        }
+
+        /// <summary>
+        /// The evil one. Commits hard drive reading fraud!
+        /// </summary>
+        private bool OnAfsReadData(IntPtr handle, byte* buffer, uint length, long offset, out int numReadBytes)
+        {
+            if (!_virtualAfsFiles.ContainsKey(handle))
+            {
+                numReadBytes = 0;
+                return false;
+            }
+
+            var afsFile       = _virtualAfsFiles[handle];
+            bool isHeaderRead = offset >= 0 && offset < afsFile.Header.Length;
+            var bufferSpan    = new Span<byte>(buffer, (int) length);
+
+            if (isHeaderRead)
+            {
+                // We are reading the file header, let's give the program the false header.
+                var fakeHeaderSpan = new Span<byte>(afsFile.HeaderPtr, afsFile.Header.Length);
+                var endOfHeader = offset + length;
+                if (endOfHeader > fakeHeaderSpan.Length)
+                    length -= (uint)(endOfHeader - fakeHeaderSpan.Length);
+
+                var slice = fakeHeaderSpan.Slice((int) offset, (int) length);
+                slice.CopyTo(bufferSpan);
+
+                numReadBytes = slice.Length;
+                return true;
+            }
+
+            // We are reading a file, let's pass a new file to the buffer.
+            if (afsFile.TryFindFile((int) offset, (int) length, out var virtualFile))
+            {
+                byte[] file = virtualFile.GetData();
+                file.CopyTo(bufferSpan);
+
+                numReadBytes = file.Length;
+                return true;
+            }
+
+            numReadBytes = 0;
+            return false;
         }
 
         /// <summary>
@@ -33,25 +79,7 @@ namespace Afs.Hook.Test
         {
             string fileName = Path.GetFileName(filepath);
             if (_builderCollection.TryGetBuilder(fileName, out var builder))
-                _virtualAfsFiles[handle] = builder.Build(GetEntriesFromFile(filepath));
-        }
-
-        /// <summary>
-        /// Obtains the AFS header from a specific file path.
-        /// </summary>
-        private AfsFileEntry[] GetEntriesFromFile(string filePath)
-        {
-            using FileStream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 8192);
-
-            var data = new byte[sizeof(AfsHeader)];
-            stream.Read(data, 0, data.Length);
-            Struct.FromArray(data, out AfsHeader header);
-
-            data = new byte[sizeof(AfsFileEntry) * header.NumberOfFiles];
-            stream.Read(data, 0, data.Length);
-            StructArray.FromArray(data, out AfsFileEntry[] entries);
-
-            return entries;
+                _virtualAfsFiles[handle] = builder.Build(filepath, 2048);
         }
 
         /// <summary>
@@ -60,7 +88,7 @@ namespace Afs.Hook.Test
         /// <param name="modDirectory">The full path to the mod.</param>
         public void OnModLoading(string modDirectory)
         {
-            if (!Directory.Exists(GetRedirectPath(modDirectory)))
+            if (Directory.Exists(GetRedirectPath(modDirectory)))
                 _builderCollection.AddFromFolders(GetRedirectPath(modDirectory));
         }
 

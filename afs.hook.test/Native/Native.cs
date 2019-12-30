@@ -24,7 +24,7 @@ namespace Afs.Hook.Test.Native
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         [Reloaded.Hooks.Definitions.X64.Function(Reloaded.Hooks.Definitions.X64.CallingConventions.Microsoft)]
         [Reloaded.Hooks.Definitions.X86.Function(Reloaded.Hooks.Definitions.X86.CallingConventions.Stdcall)]
-        public delegate int NtReadFile(IntPtr handle, IntPtr hEvent, ref IntPtr apcRoutine, ref IntPtr apcContext, 
+        public delegate int NtReadFile(IntPtr handle, IntPtr hEvent, IntPtr* apcRoutine, IntPtr* apcContext, 
             ref IO_STATUS_BLOCK ioStatus, byte* buffer, uint length, long* byteOffset, IntPtr key);
 
 
@@ -44,8 +44,8 @@ namespace Afs.Hook.Test.Native
         [StructLayout(LayoutKind.Sequential)]
         public struct IO_STATUS_BLOCK
         {
-            public UInt32 status;
-            public IntPtr information;
+            public UInt32 Status;
+            public IntPtr Information;
         }
 
         /// <summary>

@@ -29,7 +29,7 @@ namespace Afs.Hook.Test
         {
             foreach (var directory in Directory.GetDirectories(folder))
             {
-                if (!directory.EndsWith(Constants.AfsExtension))
+                if (!directory.EndsWith(Constants.AfsExtension, StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 var builder = GetBuilder(Path.GetFileName(directory));
@@ -49,7 +49,7 @@ namespace Afs.Hook.Test
         /// <param name="afsFileName">The file name of the AFS, including extension. Case insensitive.</param>
         public bool TryGetBuilder(string afsFileName, out VirtualAfsBuilder builder)
         {
-            builder = _builders.ContainsKey(afsFileName) ? _builders[afsFileName]: null;
+            builder = _builders.ContainsKey(afsFileName) ? _builders[afsFileName] : null;
             return builder != null;
         }
 

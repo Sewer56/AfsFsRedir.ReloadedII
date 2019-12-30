@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -16,7 +17,7 @@ namespace Afs.Hook.Test.Afs
     /// </summary>
     public unsafe class VirtualAfsBuilder
     {
-        private List<VirtualFile> _newFiles = new List<VirtualFile>();
+        private Dictionary<int, Afs.VirtualFile> _customFiles = new Dictionary<int, VirtualFile>();
 
         /// <summary>
         /// Adds a file to the Virtual AFS builder.
@@ -26,37 +27,70 @@ namespace Afs.Hook.Test.Afs
             if (index > ushort.MaxValue)
                 throw new Exception($"Attempted to add file with index > {index}, this is not supported by the AFS container.");
 
-            _newFiles.Add(new VirtualFile(index, filePath));
+            _customFiles[index] = new VirtualFile(filePath);
         }
 
         /// <summary>
         /// Builds a virtual AFS based upon a supplied base AFS file.
         /// </summary>
-        public VirtualAfs Build(ICollection<AfsFileEntry> entries, int alignment = 2048)
+        public VirtualAfs Build(string afsFilePath, int alignment = 2048)
         {
-            // Get Custom File List
-            var customFiles = new Dictionary<int, VirtualFile>(_newFiles.Count);
+            // Get entries from original AFS file.
+            var entries = GetEntriesFromFile(afsFilePath);
+            var files   = new Dictionary<int, VirtualFile>(entries.Length);
 
-            foreach (var file in _newFiles) 
-                customFiles[file.FileIndex] = file;
-
-            // Get Original File List and Patch Where Necessary.
-            var numFiles      = Math.Max(_newFiles.Max(x => x.FileIndex) + 1, entries.Count);
+            // Get Original File List and Copy to New Header.
+            var maxCustomFileId = _customFiles.Count > 0 ? _customFiles.Max(x => x.Key) + 1 : 0;
+            var numFiles      = Math.Max(maxCustomFileId, entries.Length);
             var newEntries    = new AfsFileEntry[numFiles];
-            entries.CopyTo(newEntries, entries.Count);
+            var headerLength  = Utilities.RoundUp(sizeof(AfsHeader) + (sizeof(AfsFileEntry) * entries.Length), alignment);
 
-            foreach (var file in customFiles)
+            // Create new Virtual AFS Header
+            for (int x = 0; x < entries.Length; x++)
             {
-                newEntries[file.Key] = new AfsFileEntry(0, (int) new System.IO.FileInfo(file.Value.FilePath).Length);
-            }
+                var offset = x > 0 ? Utilities.RoundUp(newEntries[x - 1].Offset + newEntries[x - 1].Length, alignment) : entries[0].Offset;
+                int length = 0;
 
-            // Header
-            using var memStream = new ExtendedMemoryStream(sizeof(AfsHeader) + (sizeof(AfsFileEntry) * _newFiles.Count) + alignment);
+                if (_customFiles.ContainsKey(x))
+                {
+                    length = _customFiles[x].Length;
+                    files[offset] = _customFiles[x];
+                }
+                else
+                {
+                    length = entries[x].Length;
+                    files[offset] = new VirtualFile(entries[x], afsFilePath);
+                }
+
+                newEntries[x] = new AfsFileEntry(offset, length);
+            }
+            
+            // Make Header
+            using var memStream = new ExtendedMemoryStream(headerLength);
             memStream.Append(AfsHeader.FromNumberOfFiles(newEntries.Length));
             memStream.Append(newEntries);
+            memStream.Append(new AfsFileEntry(0,0));
             memStream.AddPadding(alignment);
 
-            return new VirtualAfs(memStream.ToArray(), customFiles);
+            return new VirtualAfs(memStream.ToArray(), files, alignment);
+        }
+
+        /// <summary>
+        /// Obtains the AFS header from a specific file path.
+        /// </summary>
+        private AfsFileEntry[] GetEntriesFromFile(string filePath)
+        {
+            using FileStream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 8192);
+
+            var data = new byte[sizeof(AfsHeader)];
+            stream.Read(data, 0, data.Length);
+            Struct.FromArray(data, out AfsHeader header);
+
+            data = new byte[sizeof(AfsFileEntry) * header.NumberOfFiles];
+            stream.Read(data, 0, data.Length);
+            StructArray.FromArray(data, out AfsFileEntry[] entries);
+
+            return entries;
         }
     }
 }

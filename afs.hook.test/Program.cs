@@ -18,6 +18,7 @@ namespace Afs.Hook.Test
             _modLoader.GetController<IReloadedHooks>().TryGetTarget(out var hooks);
 
             /* Your mod code starts here. */
+            Debugger.Launch();
             _afsHook = new AfsHook(NativeFunctions.GetInstance(hooks));
             _modLoader.ModLoading += OnModLoading;
             _modLoader.OnModLoaderInitialized += OnModLoaderInitialized;

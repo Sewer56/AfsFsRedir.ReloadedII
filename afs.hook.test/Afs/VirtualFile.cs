@@ -13,6 +13,12 @@ namespace Afs.Hook.Test.Afs
         private static Dictionary<string, IntPtr> _handleCache = new Dictionary<string, IntPtr>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
+        /// Returns true if this file is an external file outside of an AFS archive (offset == 0).
+        /// Else returns false.
+        /// </summary>
+        public bool IsExternalFile => Offset == 0;
+
+        /// <summary>
         /// Offset of the file inside the AFS archive.
         /// </summary>
         public int Offset { get; private set; }

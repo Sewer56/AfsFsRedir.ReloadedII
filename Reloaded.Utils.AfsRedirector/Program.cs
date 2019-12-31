@@ -11,6 +11,7 @@ namespace Reloaded.Utils.AfsRedirector
         private IModLoader _modLoader;
         private AfsHook _afsHook;
 
+        public static void Main(string[] args) { }
         public void Start(IModLoaderV1 loader)
         {
             _modLoader = (IModLoader)loader;

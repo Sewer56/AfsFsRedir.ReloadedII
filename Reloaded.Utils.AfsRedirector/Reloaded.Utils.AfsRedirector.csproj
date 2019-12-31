@@ -7,6 +7,9 @@
     <AssemblyName>Reloaded.Utils.AfsRedirector</AssemblyName>
     <RootNamespace>Reloaded.Utils.AfsRedirector</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationIcon />
+    <OutputType>WinExe</OutputType>
+    <StartupObject />
   </PropertyGroup>
 
   <ItemGroup>

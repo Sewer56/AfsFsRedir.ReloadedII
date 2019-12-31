@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using Afs.Hook.Test.Afs;
-using Afs.Hook.Test.Structs;
-using AFSLib;
-using AFSLib.AfsStructs;
-using Microsoft.Win32.SafeHandles;
-using Reloaded.Memory;
+using Reloaded.Utils.AfsRedirector.Afs;
+using Reloaded.Utils.AfsRedirector.Structs;
 
-namespace Afs.Hook.Test
+namespace Reloaded.Utils.AfsRedirector
 {
     /// <summary>
     /// FileSystem hook that redirects accesses to AFS file.

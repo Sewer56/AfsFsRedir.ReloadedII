@@ -1,21 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Windows.Forms;
-using Afs.Hook.Test.Structs;
-using AFSLib;
 using AFSLib.AfsStructs;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Memory;
-using FileInfo = Afs.Hook.Test.Structs.FileInfo;
+using Reloaded.Utils.AfsRedirector.Structs;
+using FileInfo = Reloaded.Utils.AfsRedirector.Structs.FileInfo;
 
-namespace Afs.Hook.Test
+namespace Reloaded.Utils.AfsRedirector
 {
     public unsafe class AfsFileTracker
     {

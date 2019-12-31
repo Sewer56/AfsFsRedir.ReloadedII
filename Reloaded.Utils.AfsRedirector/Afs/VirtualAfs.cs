@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
-using Afs.Hook.Test.Structs;
 using AFSLib;
-using Reloaded.Memory.Sources;
-using Reloaded.Memory.Utilities;
-using static Afs.Hook.Test.Structs.Utilities;
+using Reloaded.Utils.AfsRedirector.Structs;
+using static Reloaded.Utils.AfsRedirector.Structs.Utilities;
 
-namespace Afs.Hook.Test.Afs
+namespace Reloaded.Utils.AfsRedirector.Afs
 {
     public unsafe class VirtualAfs
     {

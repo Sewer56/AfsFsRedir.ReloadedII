@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 using AFSLib.AfsStructs;
-using Microsoft.Win32.SafeHandles;
 
-namespace Afs.Hook.Test.Afs
+namespace Reloaded.Utils.AfsRedirector.Afs
 {
     public class VirtualFile
     {

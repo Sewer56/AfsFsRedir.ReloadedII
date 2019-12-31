@@ -3,10 +3,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
-using Microsoft.Win32.SafeHandles;
-using Reloaded.Memory.Sources;
 
-namespace Afs.Hook.Test.Native
+namespace Reloaded.Utils.AfsRedirector.Native
 {
     public unsafe class Native
     {
@@ -164,7 +162,7 @@ namespace Afs.Hook.Test.Native
                 {
                     if (buffer != IntPtr.Zero)
                     {
-                        Memory.CurrentProcess.ReadRaw(buffer, out byte[] uniString, Length);
+                        Memory.Sources.Memory.CurrentProcess.ReadRaw(buffer, out byte[] uniString, Length);
                         return Encoding.Unicode.GetString(uniString);
                     }
 

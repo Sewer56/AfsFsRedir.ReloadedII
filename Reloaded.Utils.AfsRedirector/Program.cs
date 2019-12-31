@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Diagnostics;
-using Afs.Hook.Test.Structs;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
+using Reloaded.Utils.AfsRedirector.Structs;
 using IReloadedHooks = Reloaded.Hooks.ReloadedII.Interfaces.IReloadedHooks;
 
-namespace Afs.Hook.Test
+namespace Reloaded.Utils.AfsRedirector
 {
     public unsafe class Program : IMod
     {

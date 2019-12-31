@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using Afs.Hook.Test.Afs;
+using Reloaded.Utils.AfsRedirector.Afs;
 
-namespace Afs.Hook.Test
+namespace Reloaded.Utils.AfsRedirector
 {
     /// <summary>
     /// Encapsulates a group of AFS Builders, keyed by file names.

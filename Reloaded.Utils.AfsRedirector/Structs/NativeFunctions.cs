@@ -1,8 +1,8 @@
 ﻿using System;
 using Reloaded.Hooks.Definitions;
-using static Afs.Hook.Test.Native.Native;
+using static Reloaded.Utils.AfsRedirector.Native.Native;
 
-namespace Afs.Hook.Test.Structs
+namespace Reloaded.Utils.AfsRedirector.Structs
 {
     public struct NativeFunctions
     {

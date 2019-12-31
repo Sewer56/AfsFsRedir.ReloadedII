@@ -1,0 +1,15 @@
+{
+  "ModId": "reloaded.utils.afsredirector",
+  "ModName": "Generic AFS Archive Redirector",
+  "ModAuthor": "Sewer56",
+  "ModVersion": "1.0.0",
+  "ModDescription": "Experimental Windows FileSystem level hook allowing redirection of CRIWare AFS archive contents.",
+  "ModDll": "Reloaded.Utils.AfsRedirector.dll",
+  "ModIcon": "Preview.png",
+  "ModR2RManagedDll32": "x86/Reloaded.Utils.AfsRedirector",
+  "ModR2RManagedDll64": "x64/Reloaded.Utils.AfsRedirector",
+  "ModNativeDll32": "",
+  "ModNativeDll64": "",
+  "ModDependencies": [ "reloaded.sharedlib.hooks" ],
+  "SupportedAppId": [ "tsonic_win.exe", "sonic2app.exe" ]
+}

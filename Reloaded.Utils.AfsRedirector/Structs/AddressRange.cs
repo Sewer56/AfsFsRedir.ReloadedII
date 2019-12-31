@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Afs.Hook.Test.Structs
+﻿namespace Reloaded.Utils.AfsRedirector.Structs
 {
     /// <summary>
     /// Defines a physical address range with a minimum and maximum address.

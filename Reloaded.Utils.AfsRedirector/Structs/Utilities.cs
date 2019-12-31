@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Afs.Hook.Test.Structs
+﻿namespace Reloaded.Utils.AfsRedirector.Structs
 {
     internal static class Utilities
     {

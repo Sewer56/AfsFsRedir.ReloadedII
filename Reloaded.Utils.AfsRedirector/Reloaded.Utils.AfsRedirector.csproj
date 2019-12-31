@@ -4,8 +4,8 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <AssemblyName>Afs.Hook.Test</AssemblyName>
-    <RootNamespace>Afs.Hook.Test</RootNamespace>
+    <AssemblyName>Reloaded.Utils.AfsRedirector</AssemblyName>
+    <RootNamespace>Reloaded.Utils.AfsRedirector</RootNamespace>
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 

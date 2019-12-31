@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "afs.hook.test", "afs.hook.test\afs.hook.test.csproj", "{14B96780-1396-45CC-85C5-35A7993D398D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Reloaded.Utils.AfsRedirector", "Reloaded.Utils.AfsRedirector\Reloaded.Utils.AfsRedirector.csproj", "{14B96780-1396-45CC-85C5-35A7993D398D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Submodules", "Submodules", "{6775D225-963B-450B-85D1-8CC72612EBA8}"
 EndProject

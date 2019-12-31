@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Afs.Hook.Test
+﻿namespace Reloaded.Utils.AfsRedirector
 {
     public static class Constants
     {

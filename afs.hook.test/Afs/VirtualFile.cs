@@ -58,6 +58,19 @@ namespace Afs.Hook.Test.Afs
         }
 
         /// <summary>
+        /// Reads the data from the hard disk, returning the number of read bytes into the buffer.
+        /// </summary>
+        public int GetData(Span<byte> buffer)
+        {
+            using FileStream stream = new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 8192);
+            stream.Seek(Offset, SeekOrigin.Begin);
+            stream.Read(buffer);
+            buffer.Slice(0, Length);
+
+            return Length;
+        }
+
+        /// <summary>
         /// Gets a <see cref="VirtualFile"/> that corresponds to a slice of this <see cref="VirtualFile"/>
         /// instance.
         /// </summary>

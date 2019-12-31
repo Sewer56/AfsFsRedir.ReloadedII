@@ -19,7 +19,7 @@ namespace Afs.Hook.Test
         private AfsFileTracker _afsFileTracker;
 
         private AfsBuilderCollection _builderCollection = new AfsBuilderCollection();
-        private Dictionary<IntPtr, VirtualAfs> _virtualAfsFiles = new Dictionary<IntPtr, VirtualAfs>();
+        private Dictionary<string, VirtualAfs> _virtualAfsFiles = new Dictionary<string, VirtualAfs>(StringComparer.OrdinalIgnoreCase);
 
         public AfsHook(NativeFunctions functions)
         {
@@ -33,39 +33,39 @@ namespace Afs.Hook.Test
         /// </summary>
         private bool OnAfsReadData(IntPtr handle, byte* buffer, uint length, long offset, out int numReadBytes)
         {
-            if (!_virtualAfsFiles.ContainsKey(handle))
+            if (_afsFileTracker.TryGetInfoForHandle(handle, out var info))
             {
-                numReadBytes = 0;
-                return false;
-            }
+                if (!_virtualAfsFiles.ContainsKey(info.FilePath))
+                {
+                    numReadBytes = 0;
+                    return false;
+                }
 
-            var afsFile       = _virtualAfsFiles[handle];
-            bool isHeaderRead = offset >= 0 && offset < afsFile.Header.Length;
-            var bufferSpan    = new Span<byte>(buffer, (int) length);
+                var afsFile = _virtualAfsFiles[info.FilePath];
+                bool isHeaderRead = offset >= 0 && offset < afsFile.Header.Length;
+                var bufferSpan = new Span<byte>(buffer, (int)length);
 
-            if (isHeaderRead)
-            {
-                // We are reading the file header, let's give the program the false header.
-                var fakeHeaderSpan = new Span<byte>(afsFile.HeaderPtr, afsFile.Header.Length);
-                var endOfHeader = offset + length;
-                if (endOfHeader > fakeHeaderSpan.Length)
-                    length -= (uint)(endOfHeader - fakeHeaderSpan.Length);
+                if (isHeaderRead)
+                {
+                    // We are reading the file header, let's give the program the false header.
+                    var fakeHeaderSpan = new Span<byte>(afsFile.HeaderPtr, afsFile.Header.Length);
+                    var endOfHeader = offset + length;
+                    if (endOfHeader > fakeHeaderSpan.Length)
+                        length -= (uint)(endOfHeader - fakeHeaderSpan.Length);
 
-                var slice = fakeHeaderSpan.Slice((int) offset, (int) length);
-                slice.CopyTo(bufferSpan);
+                    var slice = fakeHeaderSpan.Slice((int)offset, (int)length);
+                    slice.CopyTo(bufferSpan);
 
-                numReadBytes = slice.Length;
-                return true;
-            }
+                    numReadBytes = slice.Length;
+                    return true;
+                }
 
-            // We are reading a file, let's pass a new file to the buffer.
-            if (afsFile.TryFindFile((int) offset, (int) length, out var virtualFile))
-            {
-                byte[] file = virtualFile.GetData();
-                file.CopyTo(bufferSpan);
-
-                numReadBytes = file.Length;
-                return true;
+                // We are reading a file, let's pass a new file to the buffer.
+                if (afsFile.TryFindFile((int)offset, (int)length, out var virtualFile))
+                {
+                    numReadBytes = virtualFile.GetData(bufferSpan);
+                    return true;
+                }
             }
 
             numReadBytes = 0;
@@ -77,9 +77,15 @@ namespace Afs.Hook.Test
         /// </summary>
         private void OnAfsHandleOpened(IntPtr handle, string filepath)
         {
+            if (_virtualAfsFiles.ContainsKey(filepath))
+                return;
+
+#if DEBUG
+            Console.WriteLine("------------ BUILDING AFS ------------");
+#endif
             string fileName = Path.GetFileName(filepath);
             if (_builderCollection.TryGetBuilder(fileName, out var builder))
-                _virtualAfsFiles[handle] = builder.Build(filepath, 2048);
+                _virtualAfsFiles[filepath] = builder.Build(filepath);
         }
 
         /// <summary>

@@ -37,6 +37,8 @@ namespace Afs.Hook.Test
         /// Maps file handles to file paths.
         /// </summary>
         private ConcurrentDictionary<IntPtr, FileInfo> _handleToInfoMap = new ConcurrentDictionary<IntPtr, FileInfo>();
+        private Dictionary<string, bool> _isAfsFileCache = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+
         private IHook<Native.Native.NtCreateFile> _createFileHook;
         private IHook<Native.Native.NtReadFile> _readFileHook;
         private IHook<Native.Native.NtSetInformationFile> _setFilePointerHook;
@@ -55,6 +57,20 @@ namespace Afs.Hook.Test
             // Problem: Native->Managed Transition hits NtClose in .NET Core, so our hook code is never hit.
             // Problem: NtClose needs synchronization.
             // Solution: Write custom ASM to solve the problem, see NtClose branch.
+        }
+
+        /// <summary>
+        /// Tries to get the information for a file behind a handle.
+        /// </summary>
+        public bool TryGetInfoForHandle(IntPtr handle, out FileInfo info)
+        {
+            info = null;
+
+            if (!_handleToInfoMap.ContainsKey(handle))
+                return false;
+
+            info = _handleToInfoMap[handle];
+            return true;
         }
 
         private int SetInformationFileImpl(IntPtr hfile, out Native.Native.IO_STATUS_BLOCK ioStatusBlock, void* fileInformation, uint length, Native.Native.FileInformationClass fileInformationClass)
@@ -79,7 +95,9 @@ namespace Afs.Hook.Test
                 {
                     long offset          = _handleToInfoMap[handle].FilePointer;
                     long requestedOffset = byteOffset != (void*) 0 ? *byteOffset : -1;
+                    #if DEBUG
                     Console.WriteLine($"[AFSHook] Read Request, Buffer: {(long)buffer:X}, Length: {length}, Offset (via SetInformationFile): {offset}, Requested Offset (Optional): {requestedOffset}");
+                    #endif
                     
                     DisableRedirectionHooks();
                     bool result;
@@ -119,7 +137,9 @@ namespace Afs.Hook.Test
                     DisableRedirectionHooks();
                     if (IsAfsFile(newFilePath))
                     {
+                        #if DEBUG
                         Console.WriteLine($"[AFSHook] AFS File Handle Opened: {handle}, File: {newFilePath}");
+                        #endif
                         _handleToInfoMap[handle] = new FileInfo(newFilePath, 0);
                         OnAfsHandleOpened(handle, newFilePath);
                     }
@@ -133,7 +153,9 @@ namespace Afs.Hook.Test
                 if (_handleToInfoMap.ContainsKey(handle))
                 {
                     _handleToInfoMap.TryRemove(handle, out var value);
+                    #if DEBUG
                     Console.WriteLine($"[AFSHook] Removed old disposed handle: {handle}, File: {value.FilePath}");
+                    #endif
                 }
 
                 return ntStatus;
@@ -157,15 +179,22 @@ namespace Afs.Hook.Test
         /// </summary>
         private bool IsAfsFile(string filePath)
         {
+            if (_isAfsFileCache.ContainsKey(filePath))
+                return _isAfsFileCache[filePath];
+
             if (!File.Exists(filePath))
                 return false;
 
             using FileStream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, sizeof(AfsHeader));
             
-            var data = new byte[sizeof(AfsHeader)];
-            stream.Read(data, 0, data.Length);
-            Struct.FromArray(data, out AfsHeader header);
-            return header.IsAfsArchive;
+            var data     = new byte[sizeof(AfsHeader)];
+            var dataSpan = data.AsSpan();
+            stream.Read(dataSpan);
+            Struct.FromArray(dataSpan, out AfsHeader header);
+            
+            bool isAfsFile = header.IsAfsArchive;
+            _isAfsFileCache[filePath] = isAfsFile;
+            return isAfsFile;
         }
 
         /// <summary>

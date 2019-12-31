@@ -1,0 +1,40 @@
+//------------------------------------------------
+//--- 010 Editor v10.0 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+LittleEndian();
+char afsTag[4];
+int numberOfFiles;
+
+struct fileMetadataEntry 
+{
+    char fileName[32]; 
+    ushort year;
+    ushort month;
+    ushort day;
+    ushort hour;
+    ushort minute;
+    ushort second;
+    int length;
+};
+
+struct fileEntry 
+{
+  int offset;
+  int length;
+} files[numberOfFiles];
+
+fileEntry fileNameSection;
+if (fileNameSection.offset > 0) 
+{
+    FSeek(fileNameSection.offset);
+    fileMetadataEntry metadata[numberOfFiles];
+}

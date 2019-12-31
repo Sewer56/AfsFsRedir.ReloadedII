@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using AFSLib.AfsStructs;
+using Microsoft.Win32.SafeHandles;
 
 namespace Afs.Hook.Test.Afs
 {
     public class VirtualFile
     {
+        private static Dictionary<string, IntPtr> _handleCache = new Dictionary<string, IntPtr>(StringComparer.OrdinalIgnoreCase);
+
         /// <summary>
         /// Offset of the file inside the AFS archive.
         /// </summary>
@@ -23,11 +27,17 @@ namespace Afs.Hook.Test.Afs
         /// </summary>
         public string FilePath { get; private set; }
 
+        /// <summary>
+        /// Gets the handle used to access the file.
+        /// </summary>
+        public IntPtr Handle { get; private set; }
+
         public VirtualFile(int offset, int length, string filePath)
         {
             Offset = offset;
             Length = length;
             FilePath = filePath;
+            SetHandle();
         }
 
         public VirtualFile(AfsFileEntry entry, string filePath)
@@ -35,6 +45,7 @@ namespace Afs.Hook.Test.Afs
             Offset = entry.Offset;
             Length = entry.Length;
             FilePath = filePath;
+            SetHandle();
         }
 
         public VirtualFile(string filePath)
@@ -42,30 +53,48 @@ namespace Afs.Hook.Test.Afs
             Offset = 0;
             Length = (int) new System.IO.FileInfo(filePath).Length;
             FilePath = filePath;
+            SetHandle();
+        }
+
+        private void SetHandle()
+        {
+            if (_handleCache.ContainsKey(FilePath))
+            {
+                Handle = _handleCache[FilePath];
+            }
+            else
+            {
+                Handle = CreateFileW(FilePath, FileAccess.Read, FileShare.ReadWrite, IntPtr.Zero, FileMode.Open, FileAttributes.Normal, IntPtr.Zero);
+                _handleCache[FilePath] = Handle;
+            }
         }
 
         /// <summary>
         /// Reads the file from the hard disk.
         /// </summary>
-        public byte[] GetData()
+        public unsafe byte[] GetData()
         {
-            using FileStream stream = new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 8192);
-            stream.Seek(Offset, SeekOrigin.Begin);
-            
             byte[] buffer = new byte[Length];
-            stream.Read(buffer, 0, Length);
+            fixed (byte* buf = buffer)
+            {
+                SetFilePointerEx(Handle, Offset, IntPtr.Zero, 0);
+                ReadFile(Handle, buf, (uint) Length, out var bytesRead, IntPtr.Zero);
+            }
+            
             return buffer;
         }
 
         /// <summary>
         /// Reads the data from the hard disk, returning the number of read bytes into the buffer.
         /// </summary>
-        public int GetData(Span<byte> buffer)
+        public unsafe int GetData(Span<byte> buffer)
         {
-            using FileStream stream = new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 8192);
-            stream.Seek(Offset, SeekOrigin.Begin);
-            stream.Read(buffer);
-            buffer.Slice(0, Length);
+            buffer = buffer.Slice(0, Length);
+            fixed (byte* buf = buffer)
+            {
+                SetFilePointerEx(Handle, Offset, IntPtr.Zero, 0);
+                ReadFile(Handle, buf, (uint)Length, out var bytesRead, IntPtr.Zero);
+            }
 
             return Length;
         }
@@ -116,5 +145,16 @@ namespace Afs.Hook.Test.Afs
 
             return new VirtualFile(finalOffset, length, FilePath);
         }
+
+        #region Native Imports
+        [DllImport("kernel32.dll")]
+        private static extern int SetFilePointerEx(IntPtr hFile, long liDistanceToMove, IntPtr lpNewFilePointer, uint dwMoveMethod);
+
+        [DllImport("kernel32.dll")]
+        private static extern unsafe bool ReadFile(IntPtr hFile, byte* lpBuffer, uint nNumberOfBytesToRead, out uint lpNumberOfBytesRead, IntPtr lpOverlapped);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+        private static extern IntPtr CreateFileW(string filename, FileAccess access, FileShare share, IntPtr securityAttributes, FileMode creationDisposition, FileAttributes flagsAndAttributes, IntPtr templateFile);
+        #endregion
     }
 }

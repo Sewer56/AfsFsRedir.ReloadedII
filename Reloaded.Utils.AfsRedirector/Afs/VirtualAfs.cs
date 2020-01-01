@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using AFSLib;
 using Reloaded.Utils.AfsRedirector.Structs;
@@ -6,7 +7,7 @@ using static Reloaded.Utils.AfsRedirector.Structs.Utilities;
 
 namespace Reloaded.Utils.AfsRedirector.Afs
 {
-    public unsafe class VirtualAfs
+    public unsafe class VirtualAfs : IDisposable
     {
         private const int LastOffetsNum = 4;
 
@@ -48,6 +49,17 @@ namespace Reloaded.Utils.AfsRedirector.Afs
 
             _virtualAfsHandle = GCHandle.Alloc(Header, GCHandleType.Pinned);
             HeaderPtr = (byte*) _virtualAfsHandle.Value.AddrOfPinnedObject();
+        }
+
+        ~VirtualAfs()
+        {
+            Dispose();
+        }
+
+        public void Dispose()
+        {
+            _virtualAfsHandle?.Free();
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>

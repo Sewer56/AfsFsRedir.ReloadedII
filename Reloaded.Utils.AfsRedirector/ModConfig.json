@@ -11,5 +11,6 @@
   "ModNativeDll32": "",
   "ModNativeDll64": "",
   "ModDependencies": [ "reloaded.sharedlib.hooks" ],
+  "OptionalDependencies": [ "reloaded.universal.redirector" ],
   "SupportedAppId": [ "tsonic_win.exe", "sonic2app.exe" ]
 }

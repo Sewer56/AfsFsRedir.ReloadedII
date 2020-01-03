@@ -87,12 +87,15 @@ namespace Reloaded.Utils.AfsRedirector.Afs
             var requestedReadRange = new AddressRange(offset, offset + length);
             foreach (var recentOffset in _recentOffsets)
             {
-                var lastFile = Files[recentOffset];
-                var lastFileOffset = lastFile.IsExternalFile ? recentOffset : lastFile.Offset;
+                if (Files.ContainsKey(recentOffset))
+                {
+                    var lastFile = Files[recentOffset];
+                    var lastFileOffset = lastFile.IsExternalFile ? recentOffset : lastFile.Offset;
 
-                var entryReadRange = new AddressRange(lastFileOffset, RoundUp(lastFileOffset + lastFile.Length, Alignment));
-                if (entryReadRange.Contains(ref requestedReadRange))
-                    return ReturnFoundFile(entryReadRange, out file);
+                    var entryReadRange = new AddressRange(lastFileOffset, RoundUp(lastFileOffset + lastFile.Length, Alignment));
+                    if (entryReadRange.Contains(ref requestedReadRange))
+                        return ReturnFoundFile(entryReadRange, out file);
+                }
             }
 
             // Otherwise search one by one in O(N) fashion.

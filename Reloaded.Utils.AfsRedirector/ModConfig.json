@@ -2,7 +2,7 @@
   "ModId": "reloaded.utils.afsredirector",
   "ModName": "Generic AFS Archive Redirector",
   "ModAuthor": "Sewer56",
-  "ModVersion": "1.0.2",
+  "ModVersion": "1.0.3",
   "ModDescription": "Experimental Windows FileSystem level hook allowing redirection of CRIWare AFS archive contents.",
   "ModDll": "Reloaded.Utils.AfsRedirector.dll",
   "ModIcon": "Preview.png",

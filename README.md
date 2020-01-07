@@ -9,7 +9,7 @@
 
 # CRIWARE AFS Redirector
 
-This is an experimental project and completely functional proof of concept. Manipulating and redirecting accesses to contents of AFS archives with *ZERO* knowledge of the target application's code.
+This is an experimental project and completely functional proof of concept mod for Reloaded II. Manipulating and redirecting accesses to contents of AFS archives with *ZERO* knowledge of the target application's code.
 
 # Table of Contents
 - [Supported Applications](#supported-applications)

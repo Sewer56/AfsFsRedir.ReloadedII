@@ -90,9 +90,8 @@ namespace Reloaded.Utils.AfsRedirector.Afs
                 if (Files.ContainsKey(recentOffset))
                 {
                     var lastFile = Files[recentOffset];
-                    var lastFileOffset = lastFile.IsExternalFile ? recentOffset : lastFile.Offset;
 
-                    var entryReadRange = new AddressRange(lastFileOffset, RoundUp(lastFileOffset + lastFile.Length, Alignment));
+                    var entryReadRange = new AddressRange(recentOffset, RoundUp(recentOffset + lastFile.Length, Alignment));
                     if (entryReadRange.Contains(ref requestedReadRange))
                         return ReturnFoundFile(entryReadRange, out file);
                 }

@@ -5,10 +5,6 @@ VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Reloaded.Utils.AfsRedirector", "Reloaded.Utils.AfsRedirector\Reloaded.Utils.AfsRedirector.csproj", "{14B96780-1396-45CC-85C5-35A7993D398D}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Submodules", "Submodules", "{6775D225-963B-450B-85D1-8CC72612EBA8}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AFSLib", "Submodules\AfsLib\AFSLib\AFSLib.csproj", "{29761835-20CE-4A44-BE98-22AAFFB11A45}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,16 +15,9 @@ Global
 		{14B96780-1396-45CC-85C5-35A7993D398D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14B96780-1396-45CC-85C5-35A7993D398D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{14B96780-1396-45CC-85C5-35A7993D398D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{29761835-20CE-4A44-BE98-22AAFFB11A45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{29761835-20CE-4A44-BE98-22AAFFB11A45}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{29761835-20CE-4A44-BE98-22AAFFB11A45}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{29761835-20CE-4A44-BE98-22AAFFB11A45}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{29761835-20CE-4A44-BE98-22AAFFB11A45} = {6775D225-963B-450B-85D1-8CC72612EBA8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F28FC068-474E-46B6-B279-73F685DA1CAF}

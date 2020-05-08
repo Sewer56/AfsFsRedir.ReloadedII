@@ -27,13 +27,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AFSLib" Version="1.0.0" />
     <PackageReference Include="Reloaded.Memory" Version="2.6.0" />
     <PackageReference Include="Reloaded.Mod.Interfaces" Version="1.6.0" />
     <PackageReference Include="Reloaded.SharedLib.Hooks" Version="1.4.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Submodules\AfsLib\AFSLib\AFSLib.csproj" />
   </ItemGroup>
 
 </Project>

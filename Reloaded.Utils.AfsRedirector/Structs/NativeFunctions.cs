@@ -12,12 +12,14 @@ namespace Reloaded.Utils.AfsRedirector.Structs
         public IFunction<NtCreateFile> NtCreateFile;
         public IFunction<NtReadFile> NtReadFile;
         public IFunction<NtSetInformationFile> SetFilePointer;
+        public IFunction<NtQueryInformationFile> GetFileSize;
 
-        public NativeFunctions(IntPtr ntCreateFile, IntPtr ntReadFile, IntPtr ntSetInformationFile, IReloadedHooks hooks)
+        public NativeFunctions(IntPtr ntCreateFile, IntPtr ntReadFile, IntPtr ntSetInformationFile, IntPtr ntQueryInformationFile, IReloadedHooks hooks)
         {
             NtCreateFile = hooks.CreateFunction<NtCreateFile>((long) ntCreateFile);
             NtReadFile = hooks.CreateFunction<NtReadFile>((long) ntReadFile);
             SetFilePointer = hooks.CreateFunction<NtSetInformationFile>((long) ntSetInformationFile);
+            GetFileSize = hooks.CreateFunction<NtQueryInformationFile>((long) ntQueryInformationFile);
         }
 
         public static NativeFunctions GetInstance(IReloadedHooks hooks)
@@ -29,8 +31,9 @@ namespace Reloaded.Utils.AfsRedirector.Structs
             var ntCreateFilePointer = GetProcAddress(ntdllHandle, "NtCreateFile");
             var ntReadFilePointer = GetProcAddress(ntdllHandle, "NtReadFile");
             var setFilePointer = GetProcAddress(ntdllHandle, "NtSetInformationFile");
+            var getFileSize = GetProcAddress(ntdllHandle, "NtQueryInformationFile");
 
-            _instance = new NativeFunctions(ntCreateFilePointer, ntReadFilePointer, setFilePointer, hooks);
+            _instance = new NativeFunctions(ntCreateFilePointer, ntReadFilePointer, setFilePointer, getFileSize, hooks);
             _instanceMade = true;
 
             return _instance;

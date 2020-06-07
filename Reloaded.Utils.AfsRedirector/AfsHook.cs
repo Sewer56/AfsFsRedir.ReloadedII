@@ -21,6 +21,18 @@ namespace Reloaded.Utils.AfsRedirector
             _afsFileTracker = new AfsFileTracker(functions);
             _afsFileTracker.OnAfsHandleOpened += OnAfsHandleOpened;
             _afsFileTracker.OnAfsReadData += OnAfsReadData;
+            _afsFileTracker.OnGetAfsSize += GetAfsFileSize;
+        }
+
+        /// <summary>
+        /// Gets the size of a virtual AFS file.
+        /// </summary>
+        private int GetAfsFileSize(IntPtr handle)
+        {
+            if (_afsFileTracker.TryGetInfoForHandle(handle, out var info))
+                return _virtualAfsFiles.ContainsKey(info.FilePath) ? _virtualAfsFiles[info.FilePath].FileSize : -1;
+
+            return -1;
         }
 
         /// <summary>

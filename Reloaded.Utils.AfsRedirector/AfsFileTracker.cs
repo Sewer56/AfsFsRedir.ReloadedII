@@ -18,6 +18,11 @@ namespace Reloaded.Utils.AfsRedirector
         public event AfsHandleOpened OnAfsHandleOpened = (path, handle) => { };
 
         /// <summary>
+        /// Gets the size of a virtual AFS file.
+        /// </summary>
+        public event AfsGetSize OnGetAfsSize = (handle) => 0;
+
+        /// <summary>
         /// Executed after data is read from an AFS file.
         /// </summary>
         public event AfsDataRead OnAfsReadData = (IntPtr handle, byte* buffer, uint length, long offset, out int numReadBytes) =>
@@ -35,8 +40,10 @@ namespace Reloaded.Utils.AfsRedirector
         private IHook<Native.Native.NtCreateFile> _createFileHook;
         private IHook<Native.Native.NtReadFile> _readFileHook;
         private IHook<Native.Native.NtSetInformationFile> _setFilePointerHook;
+        private IHook<Native.Native.NtQueryInformationFile> _getFileSizeHook;
 
         private object _createLock = new object();
+        private object _getInfoLock = new object();
         private object _setInfoLock = new object();
         private object _readLock = new object();
 
@@ -45,6 +52,7 @@ namespace Reloaded.Utils.AfsRedirector
             _createFileHook = functions.NtCreateFile.Hook(NtCreateFileImpl).Activate();
             _readFileHook = functions.NtReadFile.Hook(NtReadFileImpl).Activate();
             _setFilePointerHook = functions.SetFilePointer.Hook(SetInformationFileImpl).Activate();
+            _getFileSizeHook = functions.GetFileSize.Hook(QueryInformationFileHook).Activate();
 
             // TODO: Hook NtClose
             // Problem: Native->Managed Transition hits NtClose in .NET Core, so our hook code is never hit.
@@ -64,6 +72,29 @@ namespace Reloaded.Utils.AfsRedirector
 
             info = _handleToInfoMap[handle];
             return true;
+        }
+
+        private int QueryInformationFileHook(IntPtr hfile, out Native.Native.IO_STATUS_BLOCK ioStatusBlock, void* fileInformation, uint length, Native.Native.FileInformationClass fileInformationClass)
+        {
+            lock (_getInfoLock)
+            {
+                var result = _getFileSizeHook.OriginalFunction(hfile, out ioStatusBlock, fileInformation, length, fileInformationClass);
+
+                if (_handleToInfoMap.ContainsKey(hfile) && fileInformationClass == Native.Native.FileInformationClass.FileStandardInformation)
+                {
+                    var information = (Native.Native.FILE_STANDARD_INFORMATION*)fileInformation;
+                    var oldSize = information->EndOfFile;
+                    var newSize = OnGetAfsSize(hfile);
+                    if (newSize != -1)
+                        information->EndOfFile = newSize;
+
+                    #if DEBUG
+                    Console.WriteLine($"File Size Override | Old: {oldSize}, New: {information->EndOfFile} | {_handleToInfoMap[hfile].FilePath}");
+                    #endif
+                }
+
+                return result;
+            }
         }
 
         private int SetInformationFileImpl(IntPtr hfile, out Native.Native.IO_STATUS_BLOCK ioStatusBlock, void* fileInformation, uint length, Native.Native.FileInformationClass fileInformationClass)
@@ -159,12 +190,14 @@ namespace Reloaded.Utils.AfsRedirector
         {
             _createFileHook.Disable();
             _readFileHook.Disable();
+            _getFileSizeHook.Disable();
         }
 
         private void EnableRedirectionHooks()
         {
             _readFileHook.Enable();
             _createFileHook.Enable();
+            _getFileSizeHook.Enable();
         }
 
         /// <summary>
@@ -210,5 +243,6 @@ namespace Reloaded.Utils.AfsRedirector
 
         public delegate void AfsHandleOpened(IntPtr handle, string filePath);
         public delegate bool AfsDataRead(IntPtr handle, byte* buffer, uint length, long offset, out int numReadBytes);
+        public delegate int  AfsGetSize(IntPtr handle);
     }
 }

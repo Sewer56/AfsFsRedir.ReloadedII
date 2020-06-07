@@ -31,6 +31,11 @@ namespace Reloaded.Utils.AfsRedirector.Afs
         /// </summary>
         public int Alignment { get; private set; }
 
+        /// <summary>
+        /// The total size of the file.
+        /// </summary>
+        public int FileSize { get; private set; }
+
         private GCHandle? _virtualAfsHandle;
         private int[] _recentOffsets = new int[LastOffetsNum];
         private int _lastOffsetIndex = 0;
@@ -41,11 +46,13 @@ namespace Reloaded.Utils.AfsRedirector.Afs
         /// <param name="afsHeader">The bytes corresponding to the new AFS header.</param>
         /// <param name="files">Mapping of all files in the archive, offset to file.</param>
         /// <param name="alignment">Sets the alignment of the files inside the archive.</param>
-        public VirtualAfs(byte[] afsHeader, Dictionary<int, VirtualFile> files, int alignment)
+        /// <param name="fileSize">Size of the virtual AFS file.</param>
+        public VirtualAfs(byte[] afsHeader, Dictionary<int, VirtualFile> files, int alignment, int fileSize)
         {
             Header = afsHeader;
             Files = files;
             Alignment = alignment;
+            FileSize = fileSize;
 
             _virtualAfsHandle = GCHandle.Alloc(Header, GCHandleType.Pinned);
             HeaderPtr = (byte*) _virtualAfsHandle.Value.AddrOfPinnedObject();

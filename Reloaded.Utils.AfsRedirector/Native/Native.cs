@@ -36,6 +36,11 @@ namespace Reloaded.Utils.AfsRedirector.Native
         [Reloaded.Hooks.Definitions.X86.Function(Reloaded.Hooks.Definitions.X86.CallingConventions.Stdcall)]
         public delegate int NtSetInformationFile(IntPtr hFile, out IO_STATUS_BLOCK ioStatusBlock, void* fileInformation, uint length, FileInformationClass fileInformationClass);
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        [Reloaded.Hooks.Definitions.X64.Function(Reloaded.Hooks.Definitions.X64.CallingConventions.Microsoft)]
+        [Reloaded.Hooks.Definitions.X86.Function(Reloaded.Hooks.Definitions.X86.CallingConventions.Stdcall)]
+        public delegate int NtQueryInformationFile(IntPtr hFile, out IO_STATUS_BLOCK ioStatusBlock, void* fileInformation, uint length, FileInformationClass fileInformationClass);
+
         /// <summary>
         /// A driver sets an IRP's I/O status block to indicate the final status of an I/O request, before calling IoCompleteRequest for the IRP.
         /// </summary>
@@ -44,6 +49,16 @@ namespace Reloaded.Utils.AfsRedirector.Native
         {
             public UInt32 Status;
             public IntPtr Information;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct FILE_STANDARD_INFORMATION
+        {
+            public long AllocationSize;
+            public long EndOfFile;
+            public uint NumberOfLinks;
+            public bool DeletePending;
+            public bool Directory;
         }
 
         /// <summary>

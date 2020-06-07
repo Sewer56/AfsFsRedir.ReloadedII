@@ -61,7 +61,10 @@ namespace Reloaded.Utils.AfsRedirector.Afs
 
                 newEntries[x] = new AfsFileEntry(offset, length);
             }
-            
+
+            var lastEntry = newEntries.Last(); 
+            var fileSize  = Utilities.RoundUp(lastEntry.Offset + lastEntry.Length, alignment);
+
             // Make Header
             using var memStream = new ExtendedMemoryStream(headerLength);
             memStream.Append(AfsHeader.FromNumberOfFiles(newEntries.Length));
@@ -69,7 +72,7 @@ namespace Reloaded.Utils.AfsRedirector.Afs
             memStream.Append(new AfsFileEntry(0,0));
             memStream.AddPadding(alignment);
 
-            return new VirtualAfs(memStream.ToArray(), files, alignment);
+            return new VirtualAfs(memStream.ToArray(), files, alignment, fileSize);
         }
 
         /// <summary>

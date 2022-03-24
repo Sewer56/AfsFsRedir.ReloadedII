@@ -1,21 +1,20 @@
-﻿namespace Reloaded.Utils.AfsRedirector.Structs
+﻿namespace Reloaded.Utils.AfsRedirector.Structs;
+
+public class FileInfo
 {
-    public class FileInfo
+    /// <summary>
+    /// Contains the absolute file path to the file.
+    /// </summary>
+    public string FilePath { get; set; }
+
+    /// <summary>
+    /// Current read pointer for the file.
+    /// </summary>
+    public long FilePointer { get; set; }
+
+    public FileInfo(string filePath, long filePointer)
     {
-        /// <summary>
-        /// Contains the absolute file path to the file.
-        /// </summary>
-        public string FilePath { get; set; }
-
-        /// <summary>
-        /// Current read pointer for the file.
-        /// </summary>
-        public long FilePointer { get; set; }
-
-        public FileInfo(string filePath, long filePointer)
-        {
-            FilePath = filePath;
-            FilePointer = filePointer;
-        }
+        FilePath = filePath;
+        FilePointer = filePointer;
     }
 }

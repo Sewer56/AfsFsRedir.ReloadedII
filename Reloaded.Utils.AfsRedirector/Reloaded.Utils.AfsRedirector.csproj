@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <AssemblyName>Reloaded.Utils.AfsRedirector</AssemblyName>
@@ -10,7 +10,18 @@
     <ApplicationIcon />
     <OutputType>WinExe</OutputType>
     <StartupObject />
+    <LangVersion>preview</LangVersion>
+    <OutputPath>$(RELOADEDIIMODS)\reloaded.utils.afsredirector</OutputPath>
+    <RobustILLink>true</RobustILLink>
   </PropertyGroup>
+
+  <ItemGroup>
+    <RobustLinkRoots Include="Reloaded.Utils.AfsRedirector" />
+    <RobustLinkAssemblies Include="Reloaded.Memory" />
+    <RobustLinkAssemblies Include="AFSLib" />
+  </ItemGroup>
+
+  <Import Project="Robust.Trimming.targets" />
 
   <ItemGroup>
     <None Remove="ModConfig.json" />
@@ -28,9 +39,9 @@
 
   <ItemGroup>
     <PackageReference Include="AFSLib" Version="1.0.0" />
-    <PackageReference Include="Reloaded.Memory" Version="2.6.0" />
-    <PackageReference Include="Reloaded.Mod.Interfaces" Version="1.6.0" />
-    <PackageReference Include="Reloaded.SharedLib.Hooks" Version="1.4.0" />
+    <PackageReference Include="Reloaded.Memory" Version="4.1.4" />
+    <PackageReference Include="Reloaded.Mod.Interfaces" Version="2.1.0" />
+    <PackageReference Include="Reloaded.SharedLib.Hooks" Version="1.9.0" />
   </ItemGroup>
 
 </Project>

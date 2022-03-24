@@ -2,7 +2,7 @@
   "ModId": "reloaded.utils.afsredirector",
   "ModName": "Generic AFS Archive Redirector",
   "ModAuthor": "Sewer56",
-  "ModVersion": "1.0.6",
+  "ModVersion": "1.0.7",
   "ModDescription": "Experimental Windows FileSystem level hook allowing redirection of CRIWare AFS archive contents.",
   "ModDll": "Reloaded.Utils.AfsRedirector.dll",
   "ModIcon": "Preview.png",
@@ -10,7 +10,36 @@
   "ModR2RManagedDll64": "x64/Reloaded.Utils.AfsRedirector.dll",
   "ModNativeDll32": "",
   "ModNativeDll64": "",
-  "ModDependencies": [ "reloaded.sharedlib.hooks" ],
-  "OptionalDependencies": [ "reloaded.universal.redirector" ],
-  "SupportedAppId": [ "tsonic_win.exe", "sonic2app.exe" ]
+  "IsLibrary": false,
+  "ReleaseMetadataFileName": "Sewer56.Update.ReleaseMetadata.json",
+  "PluginData": {
+    "GitHubDependencies": {
+      "IdToConfigMap": {
+        "reloaded.sharedlib.hooks": {
+          "Config": {
+            "UserName": "Reloaded.SharedLib.Hooks.ReloadedII",
+            "RepositoryName": "Sewer56",
+            "UseReleaseTag": true,
+            "AssetFileName": "reloaded.sharedlib.hooks.zip"
+          }
+        }
+      }
+    },
+    "GitHubRelease": {
+      "UserName": "Sewer56",
+      "RepositoryName": "AfsFsRedir.ReloadedII",
+      "UseReleaseTag": true,
+      "AssetFileName": "Mod.zip"
+    }
+  },
+  "IsUniversalMod": false,
+  "ModDependencies": [
+    "reloaded.sharedlib.hooks"
+  ],
+  "OptionalDependencies": [
+    "reloaded.universal.redirector"
+  ],
+  "SupportedAppId": [
+    "tsonic_win.exe"
+  ]
 }

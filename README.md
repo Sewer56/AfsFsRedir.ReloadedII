@@ -9,7 +9,7 @@
 
 # CRIWARE AFS Redirector
 
-Archived. Superseded by [https://github.com/Sewer56/FileEmulationFramework](FileEmulationFramework).
+Archived. Superseded by [FileEmulationFramework](https://github.com/Sewer56/FileEmulationFramework).
 
 This is an experimental project and completely functional proof of concept mod for Reloaded II. Manipulating and redirecting accesses to contents of AFS archives with *ZERO* knowledge of the target application's code.
 
